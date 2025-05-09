@@ -1,38 +1,22 @@
 <?php
-// Database connection using Railway's environment variables
-$host = getenv('MYSQLHOST') ?: 'mysql.railway.internal';
-$username = getenv('MYSQLUSER') ?: 'root';
-$password = getenv('MYSQLPASSWORD') ?: 'RfpNPskZPYVAtavflAVUVJzmyvahKHuC';
-$dbname = getenv('MYSQLDATABASE') ?: 'railway';
-$port = getenv('MYSQLPORT') ?: '3306';
+// Database connection details
+$host = "localhost";       // Server name (usually "localhost" in XAMPP)
+$username = "root";        // Default username for MySQL in XAMPP
+$password = "";            // Default password for MySQL in XAMPP (empty)
+$dbname = "mellow_mind";   // Name of your database
 
-// For external connections (like from localhost):
-$public_host = 'switchback.proxy.rlwy.net';
-$public_port = '25244';
-
-// Error reporting (disable in production)
+// Enable error reporting for debugging (during development only)
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-try {
-    // Internal Railway connection (preferred within Railway network)
-    $conn = new mysqli($host, $username, $password, $dbname, $port);
-    
-    // Alternative for external connections:
-    // $conn = new mysqli($public_host, $username, $password, $dbname, $public_port);
-    
-    if ($conn->connect_error) {
-        throw new Exception("Connection failed: " . $conn->connect_error);
-    }
-    
-    $conn->set_charset("utf8mb4");
-    
-    // Uncomment for debugging (remove in production)
-    // error_log("Successfully connected to Railway MySQL");
-    
-} catch (Exception $e) {
-    // Secure error handling
-    error_log($e->getMessage());
-    die("Database connection error. Please try again later.");
+// Create a new connection
+$conn = new mysqli($host, $username, $password, $dbname);
+
+// Check the database connection
+if ($conn->connect_error) {
+    die("Database connection failed: " . $conn->connect_error);
+} else {
+    // Optional: Debugging output to confirm connection (remove in production)
+    // echo "Database connection successful!";
 }
 ?>
