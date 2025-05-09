@@ -1,9 +1,9 @@
 <?php
 // Database connection details
-$host = "localhost";       // Server name (usually "localhost" in XAMPP)
+$host = "switchback.proxy.rlwy.net";       // Server name (usually "localhost" in XAMPP)
 $username = "root";        // Default username for MySQL in XAMPP
-$password = "";            // Default password for MySQL in XAMPP (empty)
-$dbname = "mellow_mind";   // Name of your database
+$password = "RfpNPskZPYVAtavflAVUVJzmyvahKHuC";            // Default password for MySQL in XAMPP (empty)
+$dbname = "railway";   // Name of your database
 
 // Enable error reporting for debugging (during development only)
 error_reporting(E_ALL);
