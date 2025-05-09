@@ -4,8 +4,8 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // Include database connection file
-require '../db.php';
-
+// require '../db.php';
+require __DIR__ . '/../db.php';  // Absolute path is safer
 // Set content type for JSON response
 header('Content-Type: application/json');
 
