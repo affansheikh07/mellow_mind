@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     @property
     def DATABASE_URL(self):
         return f"mysql+pymysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DATABASE}"
+        # return "mysql+pymysql://root:gfBIRcenYNvpVCLxqZrMdDppRqMuWIIA@mysql.railway.internal:3306/railway"
 
 # Initialize settings
 settings = Settings()

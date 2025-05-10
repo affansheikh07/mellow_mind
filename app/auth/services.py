@@ -25,7 +25,8 @@ class AuthService:
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
-        return {"message": "User created successfully"}
+        
+        return {"name": user_data.name,"email":user_data.email,"message": "User created successfully"}
 
     @staticmethod
     def get_user_by_email(db: Session, email: str):
@@ -40,7 +41,7 @@ class AuthService:
         if not user or not verify_password(password, user.hashed_password):
             raise HTTPException(status_code=401, detail="Incorrect email or password")
         access_token = create_access_token(data={"sub": email})
-        return {"access_token": access_token, "token_type": "bearer"}
+        return {"name": user.name,"email":user.email,"access_token": access_token, "token_type": "bearer"}
 
     @staticmethod
     def reset_password(db: Session, email: str, new_password: str):
