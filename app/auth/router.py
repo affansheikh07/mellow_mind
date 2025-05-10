@@ -15,9 +15,9 @@ async def login(credentials: UserLogin, db: Session = Depends(get_db)):
     return AuthService.authenticate_user(db, credentials.email, credentials.password)
 
 @router.post("/reset-password")
-async def reset_password(data: ResetPassword):
-    return AuthService.reset_password(data.email, data.new_password)
+async def reset_password(data: ResetPassword, db: Session = Depends(get_db)):
+    return AuthService.reset_password(db, data.email, data.new_password)
 
 @router.post("/forgot-password")
-async def forgot_password(data: ForgotPassword):
-    return AuthService.initiate_password_reset(data.email)
+async def forgot_password(data: ForgotPassword, db: Session = Depends(get_db)):
+    return AuthService.initiate_password_reset(db, data.email)
