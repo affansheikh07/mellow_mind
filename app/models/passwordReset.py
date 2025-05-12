@@ -15,7 +15,6 @@ class PasswordReset(Base):
     def __repr__(self):
         return f"<PasswordReset(email={self.email}, token={self.token}, created_at={self.created_at})>"
 
-    # Optional: Define methods for easier interaction with the model
     def as_dict(self):
         return {
             "email": self.email,

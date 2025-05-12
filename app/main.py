@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from app.auth.router import router as auth_router
-from app.core.config import settings  # Note the absolute import path
+from app.core.config import settings 
 
-app = FastAPI(title=settings.PROJECT_NAME)  # Fixed the typo (title= instead of title-)
+app = FastAPI(title=settings.PROJECT_NAME)
 app.include_router(auth_router)
 
 @app.get("/")
