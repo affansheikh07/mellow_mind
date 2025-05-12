@@ -58,6 +58,7 @@ class AuthService:
             content={
                 "status": 200,
                 "data": {
+                    "id": new_user.id,
                     "name": new_user.name,
                     "email": new_user.email,
                     "access_token": access_token,
@@ -90,6 +91,7 @@ class AuthService:
             content={
                 "status": 200,
                 "data": {
+                    "id": user.id,
                     "name": user.name,
                     "email": user.email,
                     "access_token": access_token, 
