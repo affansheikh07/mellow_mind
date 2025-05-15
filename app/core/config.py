@@ -1,6 +1,9 @@
 from pydantic_settings import BaseSettings
+from pydantic import EmailStr
 
 class Settings(BaseSettings):
+    email_user: EmailStr
+    email_pass: str
     PROJECT_NAME: str = "Mellow Mind"
     
     # Database settings
