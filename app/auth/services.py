@@ -117,8 +117,6 @@ class AuthService:
             }
         )
 
-    from datetime import datetime, timedelta, time
-
     @staticmethod
     def reset_password(db: Session, email: str, new_password: str, token: str):
         reset_entry = db.query(PasswordReset).filter(
@@ -132,13 +130,8 @@ class AuthService:
                 "status_code": 401
             }
 
-        if isinstance(reset_entry.created_at, datetime):
-            created_at_dt = reset_entry.created_at
-        else:
-            created_at_dt = datetime.combine(reset_entry.created_at, time.min)
-
-        token_age = datetime.utcnow() - created_at_dt
-
+        # No need to use datetime.combine or time.min
+        token_age = datetime.utcnow() - reset_entry.created_at
         if token_age > timedelta(minutes=15):
             db.delete(reset_entry)
             db.commit()
@@ -164,6 +157,7 @@ class AuthService:
             "message": "Password updated successfully",
             "status_code": 200
         }
+
 
 
 
