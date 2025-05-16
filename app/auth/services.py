@@ -11,6 +11,10 @@ from app.auth.schemas import UserUpdate
 import random
 from datetime import datetime, timedelta
 from app.utils.email_utils import send_email
+import os
+from uuid import uuid4
+from fastapi import UploadFile
+from typing import Optional
 
 class AuthService:
 
@@ -41,16 +45,26 @@ class AuthService:
         if password_validation:
             return password_validation
 
+        image_filename = None
+        if hasattr(user_data, "profile_image") and user_data.profile_image:
+            image = user_data.profile_image
+            extension = os.path.splitext(image.filename)[1]
+            image_filename = f"{uuid4().hex}{extension}"
+            image_path = f"uploads/{image_filename}"
+            with open(image_path, "wb") as f:
+                f.write(image.file.read())
+
         hashed_password = get_password_hash(user_data.password)
         new_user = User(
             name=user_data.name,
             email=user_data.email,
-            hashed_password=hashed_password
+            hashed_password=hashed_password,
+            profile_image=image_filename
         )
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
-        
+
         access_token = create_access_token(data={"sub": new_user.email})
 
         return JSONResponse(
@@ -62,7 +76,8 @@ class AuthService:
                     "name": new_user.name,
                     "email": new_user.email,
                     "access_token": access_token,
-                    "token_type": "bearer"
+                    "token_type": "bearer",
+                    "profile_image": image_filename
                 }
             }
         )
@@ -94,6 +109,7 @@ class AuthService:
                     "id": user.id,
                     "name": user.name,
                     "email": user.email,
+                    "profile_image": user.profile_image,
                     "access_token": access_token, 
                     "token_type": "bearer",
                     
@@ -180,19 +196,36 @@ class AuthService:
 
 
     @staticmethod
-    def update_user(db: Session, user_id: int, update_data: UserUpdate):
+    def update_user(db: Session, user_id: int, name: Optional[str], email: Optional[str], profile_image: UploadFile = None):
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
-            return JSONResponse(status_code=200, content={"status": 404,"message": "User not found"})
+            return JSONResponse(status_code=200, content={"status": 404, "message": "User not found"})
 
-        if update_data.email and update_data.email != user.email:
-            email_user = db.query(User).filter(User.email == update_data.email, User.id != user_id).first()
+        # Skip updating email if it's empty or None
+        if email and email.strip() != "" and email != user.email:
+            email_user = db.query(User).filter(User.email == email, User.id != user_id).first()
             if email_user:
-                return JSONResponse(status_code=200, content={"status": 404,"message": "Email already in use"})
-            user.email = update_data.email
+                return JSONResponse(status_code=200, content={"status": 404, "message": "Email already in use"})
+            user.email = email.strip()
 
-        if update_data.name:
-            user.name = update_data.name
+        # Skip updating name if it's empty or None
+        if name and name.strip() != "":
+            user.name = name.strip()
+
+        # Only save image if it's provided
+        if profile_image and profile_image.filename:
+            upload_dir = "uploads"
+            if not os.path.exists(upload_dir):
+                os.makedirs(upload_dir)
+
+            ext = os.path.splitext(profile_image.filename)[1]
+            filename = f"{uuid4().hex}{ext}"
+            file_path = os.path.join(upload_dir, filename)
+
+            with open(file_path, "wb") as f:
+                f.write(profile_image.file.read())
+
+            user.profile_image = filename
 
         db.commit()
         db.refresh(user)
@@ -205,7 +238,8 @@ class AuthService:
                 "data": {
                     "id": user.id,
                     "name": user.name,
-                    "email": user.email
+                    "email": user.email,
+                    "profile_image": user.profile_image
                 }
             }
         )
