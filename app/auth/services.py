@@ -117,6 +117,8 @@ class AuthService:
             }
         )
 
+    from datetime import datetime, timedelta, time
+
     @staticmethod
     def reset_password(db: Session, email: str, new_password: str, token: str):
         reset_entry = db.query(PasswordReset).filter(
@@ -130,7 +132,13 @@ class AuthService:
                 "status_code": 401
             }
 
-        token_age = datetime.utcnow() - reset_entry.created_at
+        if isinstance(reset_entry.created_at, datetime):
+            created_at_dt = reset_entry.created_at
+        else:
+            created_at_dt = datetime.combine(reset_entry.created_at, time.min)
+
+        token_age = datetime.utcnow() - created_at_dt
+
         if token_age > timedelta(minutes=15):
             db.delete(reset_entry)
             db.commit()
@@ -156,6 +164,7 @@ class AuthService:
             "message": "Password updated successfully",
             "status_code": 200
         }
+
 
 
     @staticmethod
@@ -201,18 +210,15 @@ class AuthService:
         if not user:
             return JSONResponse(status_code=200, content={"status": 404, "message": "User not found"})
 
-        # Skip updating email if it's empty or None
         if email and email.strip() != "" and email != user.email:
             email_user = db.query(User).filter(User.email == email, User.id != user_id).first()
             if email_user:
                 return JSONResponse(status_code=200, content={"status": 404, "message": "Email already in use"})
             user.email = email.strip()
 
-        # Skip updating name if it's empty or None
         if name and name.strip() != "":
             user.name = name.strip()
 
-        # Only save image if it's provided
         if profile_image and profile_image.filename:
             upload_dir = "uploads"
             if not os.path.exists(upload_dir):
