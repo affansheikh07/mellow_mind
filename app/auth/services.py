@@ -129,18 +129,6 @@ class AuthService:
                 "status_code": 401
             }
 
-        # Convert Date to DateTime safely
-        created_at_dt = datetime.combine(reset_entry.created_at, time.min)
-        token_age = datetime.utcnow() - created_at_dt
-
-        if token_age > timedelta(minutes=15):
-            db.delete(reset_entry)
-            db.commit()
-            return {
-                "message": "Token has expired",
-                "status_code": 401
-            }
-
         user = db.query(User).filter(User.email == email).first()
         if not user:
             return {
