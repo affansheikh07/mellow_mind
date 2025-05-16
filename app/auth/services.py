@@ -4,12 +4,11 @@ from app.core.security import get_password_hash, verify_password, create_access_
 import re
 from fastapi import HTTPException, Depends
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from app.models.passwordReset import PasswordReset
 from fastapi.responses import JSONResponse
 from app.auth.schemas import UserUpdate
 import random
-from datetime import datetime, timedelta, time
 from app.utils.email_utils import send_email
 import os
 from uuid import uuid4
@@ -130,8 +129,10 @@ class AuthService:
                 "status_code": 401
             }
 
-        # No need to use datetime.combine or time.min
-        token_age = datetime.utcnow() - reset_entry.created_at
+        # Convert Date to DateTime safely
+        created_at_dt = datetime.combine(reset_entry.created_at, time.min)
+        token_age = datetime.utcnow() - created_at_dt
+
         if token_age > timedelta(minutes=15):
             db.delete(reset_entry)
             db.commit()
@@ -157,8 +158,6 @@ class AuthService:
             "message": "Password updated successfully",
             "status_code": 200
         }
-
-
 
 
     @staticmethod
