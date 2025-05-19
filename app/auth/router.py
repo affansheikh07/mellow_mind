@@ -5,6 +5,12 @@ from app.auth.services import AuthService
 from app.database import get_db
 from fastapi import Form, File, UploadFile
 from typing import Optional
+from app.auth.dependencies import get_current_user
+from app.models.user import User
+from app.auth.dependencies import get_current_user, oauth2_scheme
+from app.models.accessToken import AccessToken
+from fastapi.responses import JSONResponse
+
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -26,16 +32,52 @@ async def signup(
     return AuthService.register_user(db, user_data)
 
 @router.post("/login")
-async def login(credentials: UserLogin, db: Session = Depends(get_db)):
-    return AuthService.authenticate_user(db, credentials.email, credentials.password)
+async def login(
+    email: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    return AuthService.authenticate_user(db, email, password)
 
 @router.post("/reset-password")
-async def reset_password(data: ResetPassword, db: Session = Depends(get_db)):
-    return AuthService.reset_password(db, data.email, data.new_password, data.token)
+async def reset_password(
+    email: str = Form(...),
+    new_password: str = Form(...),
+    token: str = Form(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return AuthService.reset_password(db, email, new_password, token)
 
 @router.post("/forgot-password")
-async def forgot_password(data: ForgotPassword, db: Session = Depends(get_db)):
-    return AuthService.initiate_password_reset(db, data.email)
+async def forgot_password(
+    email: str = Form(...), 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return AuthService.initiate_password_reset(db, email)
+
+@router.post("/logout")
+async def logout(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    token: str = Depends(oauth2_scheme)
+):
+    token_entry = db.query(AccessToken).filter_by(user_id=current_user.id, token=token).first()
+    
+    if not token_entry:
+        return JSONResponse(
+            status_code=200,
+            content={"status": 200, "message": "Invalid token or already logged out"}
+        )
+
+    db.delete(token_entry)
+    db.commit()
+
+    return JSONResponse(
+        status_code=200,
+        content={"status": 200, "message": "Logout successful"}
+    )
 
 @router.post("/users/{user_id}")
 async def update_user(
@@ -43,6 +85,10 @@ async def update_user(
     name: Optional[str] = Form(None),
     email: Optional[str] = Form(None),
     profile_image: UploadFile = File(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
+    if user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You are not allowed to update this user.")
+
     return AuthService.update_user(db, user_id, name, email, profile_image)

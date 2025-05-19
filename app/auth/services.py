@@ -14,6 +14,7 @@ import os
 from uuid import uuid4
 from fastapi import UploadFile
 from typing import Optional
+from app.models.accessToken import AccessToken
 
 class AuthService:
 
@@ -99,7 +100,16 @@ class AuthService:
                 "message": "Incorrect email or password",
                 "status_code": 401
             }
+
         access_token = create_access_token(data={"sub": email})
+
+        token_entry = AccessToken(
+            user_id=user.id,
+            token=access_token
+        )
+        db.add(token_entry)
+        db.commit()
+
         return JSONResponse(
             status_code=200,
             content={
@@ -111,7 +121,6 @@ class AuthService:
                     "profile_image": user.profile_image,
                     "access_token": access_token, 
                     "token_type": "bearer",
-                    
                 }
             }
         )
