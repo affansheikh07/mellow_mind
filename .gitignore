@@ -12,3 +12,6 @@ venv/
 # IDE
 .idea/
 .vscode/
+
+# firebase-admin-sdk
+mellow-mind-b65e9-firebase-adminsdk-fbsvc-232f36fe5a.json
