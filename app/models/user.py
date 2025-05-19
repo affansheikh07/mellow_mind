@@ -9,7 +9,8 @@ class User(Base):
     name = Column(String(100))
     email = Column(String(100), unique=True, index=True)
     profile_image = Column(String, nullable=True)
-    hashed_password = Column(String(255))
+    hashed_password = Column(String(255), nullable=True)
+    auth_provider = Column(String, default="local")
 
     tokens = relationship("AccessToken", back_populates="user", cascade="all, delete-orphan")
 

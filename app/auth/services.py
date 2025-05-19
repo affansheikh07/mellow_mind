@@ -15,6 +15,10 @@ from uuid import uuid4
 from fastapi import UploadFile
 from typing import Optional
 from app.models.accessToken import AccessToken
+from app.core.config import settings
+from app.firebase_init import *
+from firebase_admin import auth
+import jwt
 
 class AuthService:
 
@@ -110,6 +114,14 @@ class AuthService:
         db.add(token_entry)
         db.commit()
 
+        if user.profile_image:
+            if user.profile_image.startswith("http://") or user.profile_image.startswith("https://"):
+                profile_image_url = user.profile_image
+            else:
+                profile_image_url = f"https://mellowmind-production-457f.up.railway.app/uploads/{user.profile_image}"
+        else:
+            profile_image_url = None
+
         return JSONResponse(
             status_code=200,
             content={
@@ -118,12 +130,13 @@ class AuthService:
                     "id": user.id,
                     "name": user.name,
                     "email": user.email,
-                    "profile_image": user.profile_image,
-                    "access_token": access_token, 
+                    "profile_image": profile_image_url,
+                    "access_token": access_token,
                     "token_type": "bearer",
                 }
             }
         )
+
 
     @staticmethod
     def reset_password(db: Session, email: str, new_password: str, token: str):
@@ -226,6 +239,14 @@ class AuthService:
         db.commit()
         db.refresh(user)
 
+        if user.profile_image:
+            if user.profile_image.startswith("http://") or user.profile_image.startswith("https://"):
+                profile_image_url = user.profile_image
+            else:
+                profile_image_url = f"https://mellowmind-production-457f.up.railway.app/uploads/{user.profile_image}"
+        else:
+            profile_image_url = None
+
         return JSONResponse(
             status_code=200,
             content={
@@ -235,7 +256,68 @@ class AuthService:
                     "id": user.id,
                     "name": user.name,
                     "email": user.email,
-                    "profile_image": user.profile_image
+                    "profile_image": profile_image_url
                 }
             }
         )
+
+
+    @staticmethod
+    def create_user_from_social_login(
+        db: Session, 
+        name: str, 
+        email: str, 
+        profile_image_url: str = None, 
+        auth_provider: str = None
+    ):
+        user = db.query(User).filter(User.email == email).first()
+        
+        if not user:
+            user = User(name=name, email=email, auth_provider=auth_provider)
+            if profile_image_url:
+                user.profile_image = profile_image_url
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        else:
+            updated = False
+            if user.auth_provider != auth_provider:
+                user.auth_provider = auth_provider
+                updated = True
+            if not user.profile_image and profile_image_url:
+                user.profile_image = profile_image_url
+                updated = True
+            if updated:
+                db.commit()
+                db.refresh(user)
+
+        return user
+
+    @staticmethod
+    def generate_login_token(db: Session, user: User, auth_provider: str):
+        payload = {
+            "sub": user.email,
+            "exp": datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+            "user_id": user.id,
+            "auth_provider": auth_provider
+        }
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+        token_entry = AccessToken(user_id=user.id, token=token)
+        db.add(token_entry)
+        db.commit()
+
+        return {
+            "status": 200,
+            "data": {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "profile_image": user.profile_image,
+                "access_token": token,
+                "token_type": "bearer",
+                "auth_provider": auth_provider
+            }
+        }
+
+
