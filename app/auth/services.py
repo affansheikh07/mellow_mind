@@ -262,62 +262,62 @@ class AuthService:
         )
 
 
-    # @staticmethod
-    # def create_user_from_social_login(
-    #     db: Session, 
-    #     name: str, 
-    #     email: str, 
-    #     profile_image_url: str = None, 
-    #     auth_provider: str = None
-    # ):
-    #     user = db.query(User).filter(User.email == email).first()
+    @staticmethod
+    def create_user_from_social_login(
+        db: Session, 
+        name: str, 
+        email: str, 
+        profile_image_url: str = None, 
+        auth_provider: str = None
+    ):
+        user = db.query(User).filter(User.email == email).first()
         
-    #     if not user:
-    #         user = User(name=name, email=email, auth_provider=auth_provider)
-    #         if profile_image_url:
-    #             user.profile_image = profile_image_url
-    #         db.add(user)
-    #         db.commit()
-    #         db.refresh(user)
-    #     else:
-    #         updated = False
-    #         if user.auth_provider != auth_provider:
-    #             user.auth_provider = auth_provider
-    #             updated = True
-    #         if not user.profile_image and profile_image_url:
-    #             user.profile_image = profile_image_url
-    #             updated = True
-    #         if updated:
-    #             db.commit()
-    #             db.refresh(user)
+        if not user:
+            user = User(name=name, email=email, auth_provider=auth_provider)
+            if profile_image_url:
+                user.profile_image = profile_image_url
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        else:
+            updated = False
+            if user.auth_provider != auth_provider:
+                user.auth_provider = auth_provider
+                updated = True
+            if not user.profile_image and profile_image_url:
+                user.profile_image = profile_image_url
+                updated = True
+            if updated:
+                db.commit()
+                db.refresh(user)
 
-    #     return user
+        return user
 
-    # @staticmethod
-    # def generate_login_token(db: Session, user: User, auth_provider: str):
-    #     payload = {
-    #         "sub": user.email,
-    #         "exp": datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
-    #         "user_id": user.id,
-    #         "auth_provider": auth_provider
-    #     }
-    #     token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    @staticmethod
+    def generate_login_token(db: Session, user: User, auth_provider: str):
+        payload = {
+            "sub": user.email,
+            "exp": datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+            "user_id": user.id,
+            "auth_provider": auth_provider
+        }
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
-    #     token_entry = AccessToken(user_id=user.id, token=token)
-    #     db.add(token_entry)
-    #     db.commit()
+        token_entry = AccessToken(user_id=user.id, token=token)
+        db.add(token_entry)
+        db.commit()
 
-    #     return {
-    #         "status": 200,
-    #         "data": {
-    #             "id": user.id,
-    #             "name": user.name,
-    #             "email": user.email,
-    #             "profile_image": user.profile_image,
-    #             "access_token": token,
-    #             "token_type": "bearer",
-    #             "auth_provider": auth_provider
-    #         }
-    #     }
+        return {
+            "status": 200,
+            "data": {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "profile_image": user.profile_image,
+                "access_token": token,
+                "token_type": "bearer",
+                "auth_provider": auth_provider
+            }
+        }
 
 
