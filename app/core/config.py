@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     MYSQL_DATABASE: str = "mellow_mind"
     
     # JWT settings
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # Set default expiry time for the token (in minutes)
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 9999  # Set default expiry time for the token (in minutes)
     SECRET_KEY: str = "Hesoyam@123!"     # Replace this with a strong secret key (ideally from an environment variable)
     ALGORITHM: str = "HS256"                # JWT encoding algorithm
     
