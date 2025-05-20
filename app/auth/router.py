@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.auth.schemas import UserCreate, UserLogin, ResetPassword, ForgotPassword, UserUpdate
+from app.auth.schemas import UserCreate, UserLogin, ResetPassword, ForgotPassword, UserUpdate, ChangePasswordRequest
 from app.auth.services import AuthService
 from app.database import get_db
 from fastapi import Form, File, UploadFile
@@ -131,3 +131,12 @@ async def update_user(
         raise HTTPException(status_code=403, detail="You are not allowed to update this user.")
 
     return AuthService.update_user(db, user_id, name, email, profile_image)
+
+@router.post("/change-password")
+async def change_password_api(
+    old_password: str = Form(...),
+    new_password: str = Form(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return AuthService.change_password(db, current_user, old_password, new_password)

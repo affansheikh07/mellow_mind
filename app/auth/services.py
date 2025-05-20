@@ -19,6 +19,8 @@ from app.core.config import settings
 from app.firebase_init import *
 from firebase_admin import auth
 import jwt
+from fastapi import status
+
 
 class AuthService:
 
@@ -71,6 +73,13 @@ class AuthService:
 
         access_token = create_access_token(data={"sub": new_user.email})
 
+        token_entry = AccessToken(
+            user_id=new_user.id,
+            token=access_token
+        )
+        db.add(token_entry)
+        db.commit()
+
         return JSONResponse(
             status_code=200,
             content={
@@ -85,6 +94,7 @@ class AuthService:
                 }
             }
         )
+
 
     @staticmethod
     def get_user_by_email(db: Session, email: str):
@@ -273,7 +283,7 @@ class AuthService:
         user = db.query(User).filter(User.email == email).first()
         
         if not user:
-            user = User(name=name, email=email, auth_provider=auth_provider)
+            user = User(name=name, email=email, auth_provider=auth_provider, hashed_password=get_password_hash("123456799"))
             if profile_image_url:
                 user.profile_image = profile_image_url
             db.add(user)
@@ -319,5 +329,23 @@ class AuthService:
                 "auth_provider": auth_provider
             }
         }
+
+
+    @staticmethod
+    def change_password(db: Session, user: User, old_password: str, new_password: str):
+        if not verify_password(old_password, user.hashed_password):
+            return JSONResponse(
+                status_code=200,
+                content={"status": 400, "message": "Old password is incorrect"}
+            )
+
+        user.hashed_password = get_password_hash(new_password)
+        db.commit()
+
+        return JSONResponse(
+            status_code=200,
+            content={"status": 200, "message": "Password updated successfully"}
+        )
+
 
 

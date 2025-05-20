@@ -21,3 +21,7 @@ class ForgotPassword(BaseModel):
 class UserUpdate(BaseModel):
     name: Optional[str] = Field(None, example="New Name")
     email: Optional[EmailStr] = Field(None, example="newemail@example.com")
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str

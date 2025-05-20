@@ -1,6 +1,9 @@
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 import firebase_admin
 from firebase_admin import credentials
-import os
 
 cred = credentials.Certificate({
     "type": os.environ["FIREBASE_TYPE"],
