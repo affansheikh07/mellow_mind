@@ -283,7 +283,7 @@ class AuthService:
         user = db.query(User).filter(User.email == email).first()
         
         if not user:
-            user = User(name=name, email=email, auth_provider=auth_provider, hashed_password=get_password_hash("123456799"))
+            user = User(name=name, email=email, auth_provider=auth_provider, hashed_password=get_password_hash("123456789"))
             if profile_image_url:
                 user.profile_image = profile_image_url
             db.add(user)
